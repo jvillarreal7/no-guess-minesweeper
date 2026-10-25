@@ -16,6 +16,23 @@ const DESCRIPTIONS: Record<Exclude<CellView, number>, string> = {
   exploded: 'exploded mine',
 };
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/**
+ * A short red ring that spreads past a newly flagged cell, so the flag registers even
+ * while a fingertip covers the cell itself.
+ */
+function pulse(cell: HTMLElement): void {
+  if (reducedMotion.matches || typeof cell.animate !== 'function') return;
+  cell.animate(
+    [
+      { boxShadow: '0 0 0 0 rgba(229, 72, 77, 0.9)', zIndex: 3 },
+      { boxShadow: '0 0 0 14px rgba(229, 72, 77, 0)', zIndex: 3 },
+    ],
+    { duration: 500, easing: 'ease-out' },
+  );
+}
+
 /** The minefield: one button per cell. Only paints cells whose view changed. */
 export class BoardView {
   private cells: HTMLButtonElement[] = [];
@@ -60,9 +77,11 @@ export class BoardView {
   render(viewAt: (i: number) => CellView): void {
     this.cells.forEach((cell, i) => {
       const view = viewAt(i);
-      if (view === this.shown[i]) return;
+      const previous = this.shown[i];
+      if (view === previous) return;
       this.shown[i] = view;
       this.paint(cell, i, view);
+      if (previous === 'hidden' && view === 'flag') pulse(cell);
     });
   }
 

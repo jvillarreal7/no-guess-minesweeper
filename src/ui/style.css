@@ -13,6 +13,9 @@
   --open-line: #d6d2c9;
   --boom: #e5484d;
   --hint: #f5a524;
+  --flag-tile: #ec918b;
+  --flag-tile-hi: #f3b0ab;
+  --flag-tile-lo: #cc6c66;
   --counter-bg: #1d1f23;
   --counter-fg: #ff5a4e;
   --n1: #1f5fd1;
@@ -39,6 +42,9 @@
     --open: #262a31;
     --open-line: #31353d;
     --boom: #e5484d;
+    --flag-tile: #7c2d33;
+    --flag-tile-hi: #94393f;
+    --flag-tile-lo: #5c2026;
     --counter-bg: #0b0c0e;
     --counter-fg: #ff6b5f;
     --n1: #6ea0ff;
@@ -256,9 +262,20 @@ input,
   touch-action: manipulation;
 }
 
-.cell[data-state='hidden']:hover,
-.cell[data-state='flag']:hover {
+.cell[data-state='hidden']:hover {
   background: var(--tile-hi);
+}
+
+/* Red tiles make flags easy to spot, including around a fingertip on touch screens. */
+.cell[data-state='flag'] {
+  background: var(--flag-tile);
+  box-shadow:
+    inset 0 2px 0 var(--flag-tile-hi),
+    inset 0 -2px 0 var(--flag-tile-lo);
+}
+
+.cell[data-state='flag']:hover {
+  background: var(--flag-tile-hi);
 }
 
 .cell:focus-visible {
