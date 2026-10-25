@@ -16,7 +16,7 @@
   --flag-tile: #ec918b;
   --flag-tile-hi: #f3b0ab;
   --flag-tile-lo: #cc6c66;
-  --cat-opacity: 0.9;
+  --cat-opacity: 0.72;
   --cat-open-alpha: 40%;
   --counter-bg: #1d1f23;
   --counter-fg: #ff5a4e;
@@ -47,7 +47,7 @@
     --flag-tile: #7c2d33;
     --flag-tile-hi: #94393f;
     --flag-tile-lo: #5c2026;
-    --cat-opacity: 0.85;
+    --cat-opacity: 0.68;
     --cat-open-alpha: 50%;
     --counter-bg: #0b0c0e;
     --counter-fg: #ff6b5f;
