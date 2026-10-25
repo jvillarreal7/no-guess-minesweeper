@@ -66,6 +66,14 @@ export class BoardView {
     });
   }
 
+  /** Highlights one cell as a hint, or clears the highlight. */
+  setHint(i: number | null): void {
+    for (const cell of this.grid.querySelectorAll<HTMLElement>('[data-hint]')) {
+      delete cell.dataset.hint;
+    }
+    if (i !== null && this.cells[i]) this.cells[i].dataset.hint = 'true';
+  }
+
   /** Moves keyboard focus (and the single tab stop) to cell i. */
   focusCell(i: number): void {
     const cell = this.cells[i];

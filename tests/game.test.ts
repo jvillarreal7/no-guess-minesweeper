@@ -165,6 +165,52 @@ describe('chord', () => {
   });
 });
 
+describe('opening (shared board setup)', () => {
+  it('reveals the opening without starting the timer', () => {
+    let now = 100;
+    const game = new Game(parseBoard(WALL), { now: () => now, opening: at(5, 0, 0) });
+    expect(game.state[at(5, 0, 0)]).toBe(CellState.Revealed);
+    expect(game.state[at(5, 1, 4)]).toBe(CellState.Revealed);
+    expect(game.status).toBe('ready');
+    expect(game.startedAt).toBeNull();
+    now = 500;
+    game.reveal(at(5, 3, 0)); // a number, so the game goes on
+    expect(game.status).toBe('playing');
+    expect(game.startedAt).toBe(500);
+  });
+
+  it('can win at setup when the opening clears the board', () => {
+    const game = new Game(
+      parseBoard(`
+        *....
+        .....
+        .....
+        .....
+        ....*
+      `),
+      { opening: at(5, 2, 2) },
+    );
+    expect(game.status).toBe('won');
+    expect(game.elapsedMs()).toBe(0);
+  });
+
+  it('rejects a mine or an out-of-range opening', () => {
+    expect(() => new Game(parseBoard(WALL), { opening: at(5, 2, 0) })).toThrow();
+    expect(() => new Game(parseBoard(WALL), { opening: 25 })).toThrow(RangeError);
+  });
+});
+
+describe('visibleNumbers', () => {
+  it('shows numbers on revealed safe cells only, never flags or mines', () => {
+    const game = new Game(parseBoard(DIAGONAL));
+    game.reveal(at(3, 1, 1));
+    game.toggleFlag(at(3, 0, 0));
+    expect(Array.from(game.visibleNumbers())).toEqual([-1, -1, -1, -1, 2, -1, -1, -1, -1]);
+    game.reveal(at(3, 2, 2)); // a mine: lost, but the mine is not a number
+    expect(game.visibleNumbers()[at(3, 2, 2)]).toBe(-1);
+  });
+});
+
 describe('activate (primary click)', () => {
   it('reveals a hidden cell', () => {
     const game = new Game(parseBoard(DIAGONAL));

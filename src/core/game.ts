@@ -15,6 +15,11 @@ export type CellView = number | 'hidden' | 'flag' | 'wrong-flag' | 'mine' | 'exp
 export interface GameOptions {
   /** Clock for the timer, in ms. Injected so the engine stays deterministic in tests. */
   now?: () => number;
+  /**
+   * A safe cell to reveal as part of setup (a shared board's first click). It does not
+   * start the timer: the status stays `ready` until the player's own first reveal.
+   */
+  opening?: number;
 }
 
 export class Game {
@@ -33,6 +38,12 @@ export class Game {
     this.board = board;
     this.state = new Uint8Array(board.size);
     this.now = options.now ?? (() => Date.now());
+    if (options.opening !== undefined) {
+      this.assertIndex(options.opening);
+      if (board.mines[options.opening]) throw new Error('the opening cell must be safe');
+      this.open(options.opening, []);
+      this.settle();
+    }
   }
 
   get status(): GameStatus {
@@ -63,6 +74,19 @@ export class Game {
   elapsedMs(now: number = this.now()): number {
     if (this._startedAt === null) return 0;
     return (this._endedAt ?? now) - this._startedAt;
+  }
+
+  /**
+   * What the player can see as numbers: the number on each revealed safe cell, -1 elsewhere.
+   * Flags are left out on purpose; they are the player's guesses, not information.
+   */
+  visibleNumbers(): Int8Array {
+    const out = new Int8Array(this.board.size).fill(-1);
+    for (let i = 0; i < this.board.size; i++) {
+      if (this.state[i] === CellState.Revealed && !this.board.mines[i])
+        out[i] = this.board.numbers[i];
+    }
+    return out;
   }
 
   /** Reveals a hidden, unflagged cell (flood-filling zeros). Returns the newly revealed cells. */
