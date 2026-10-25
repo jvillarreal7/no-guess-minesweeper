@@ -10,11 +10,19 @@ import { Game } from '../core/game';
 import { recordPlayed, recordWin, statsFor, statsKey } from '../core/stats';
 import { boardQuery, parseBoardQuery, specFor } from '../generator/share';
 import type { SolveResult } from '../solver/types';
+import { CatMode, onPressAndHold } from './cat-mode';
 import { EngineClient } from './engine-client';
 import { Hud } from './hud';
 import { attachInput } from './input';
 import { BoardView } from './render';
-import { loadDifficultyChoice, loadStats, saveDifficultyChoice, saveStats } from './storage';
+import {
+  loadCatMode,
+  loadDifficultyChoice,
+  loadStats,
+  saveCatMode,
+  saveDifficultyChoice,
+  saveStats,
+} from './storage';
 
 /** Show the "generating" overlay only if generation takes longer than this. */
 const SPINNER_DELAY_MS = 150;
@@ -58,6 +66,9 @@ const hud = new Hud({
   status: byId<HTMLElement>('status'),
 });
 const engine = new EngineClient();
+const catMode = new CatMode(byId<HTMLElement>('board-frame'), () =>
+  hud.setStatus("Couldn't reach cataas.com, so no cat this time."),
+);
 
 let difficulty: Difficulty = DIFFICULTIES.beginner;
 let seed = '';
@@ -108,7 +119,7 @@ function render(): void {
   board.render(current ? (i) => current.cellView(i) : () => 'hidden');
   hud.setMines(current ? current.minesRemaining : difficulty.mineCount);
   hud.setTime(current ? current.elapsedMs() : 0);
-  hud.setFace(busy ? 'busy' : (current?.status ?? 'ready'));
+  hud.setFace(busy ? 'busy' : (current?.status ?? 'ready'), catMode.enabled);
   const playable = !busy && current !== null && !current.isOver;
   els.hint.disabled = !playable;
   els.hint.title = current ? '' : 'Your first click is always safe.';
@@ -272,7 +283,18 @@ attachInput(els.board, board, {
   },
 });
 
-byId<HTMLButtonElement>('restart').addEventListener('click', () => newGame());
+// Easter egg: hold the face for cat mode. Registered first so a hold doesn't also restart.
+onPressAndHold(byId<HTMLButtonElement>('restart'), () => {
+  catMode.set(!catMode.enabled);
+  saveCatMode(catMode.enabled);
+  navigator.vibrate?.(15);
+  hud.setStatus(catMode.enabled ? 'Cat mode on. 🐈' : 'Cat mode off.');
+  render();
+});
+byId<HTMLButtonElement>('restart').addEventListener('click', () => {
+  newGame();
+  catMode.newCat(); // A fresh cat for every new game.
+});
 els.hint.addEventListener('click', () => void requestHint());
 els.share.addEventListener('click', () => void copyLink());
 
@@ -347,4 +369,5 @@ function boot(): void {
   if (shared.kind === 'invalid') hud.setStatus(`${shared.reason} Started a new game instead.`);
 }
 
+if (loadCatMode()) catMode.set(true);
 boot();

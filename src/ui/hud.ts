@@ -10,6 +10,14 @@ const FACES: Record<FaceState, string> = {
   lost: '😵',
 };
 
+const CAT_FACES: Record<FaceState, string> = {
+  ready: '😺',
+  playing: '😺',
+  busy: '😼',
+  won: '😻',
+  lost: '🙀',
+};
+
 /** Three-digit counter display: 007, 120, -05. Clamped to what fits. */
 export function formatCounter(n: number): string {
   if (n < 0) return '-' + String(Math.min(99, -n)).padStart(2, '0');
@@ -35,8 +43,8 @@ export class Hud {
     this.els.timer.value = formatCounter(Math.floor(ms / 1000));
   }
 
-  setFace(state: FaceState): void {
-    this.els.face.textContent = FACES[state];
+  setFace(state: FaceState, cat = false): void {
+    this.els.face.textContent = (cat ? CAT_FACES : FACES)[state];
   }
 
   setStatus(text: string): void {

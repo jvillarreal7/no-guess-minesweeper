@@ -16,6 +16,8 @@
   --flag-tile: #ec918b;
   --flag-tile-hi: #f3b0ab;
   --flag-tile-lo: #cc6c66;
+  --cat-opacity: 0.9;
+  --cat-open-alpha: 40%;
   --counter-bg: #1d1f23;
   --counter-fg: #ff5a4e;
   --n1: #1f5fd1;
@@ -45,6 +47,8 @@
     --flag-tile: #7c2d33;
     --flag-tile-hi: #94393f;
     --flag-tile-lo: #5c2026;
+    --cat-opacity: 0.85;
+    --cat-open-alpha: 50%;
     --counter-bg: #0b0c0e;
     --counter-fg: #ff6b5f;
     --n1: #6ea0ff;
@@ -200,6 +204,11 @@ input,
   border: 1px solid var(--border);
   background: var(--surface);
   cursor: pointer;
+  /* Holding the face is an easter egg; don't let the hold select text or open a callout. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .face:hover {
@@ -333,6 +342,37 @@ input,
 }
 .cell[data-n='8'] {
   color: var(--n8);
+}
+
+/* Cat mode (hold the face): a cataas.com cat behind the board. `cover` keeps the photo's
+   proportions and crops it rather than stretching. Covered tiles stay fully solid and
+   only revealed cells are see-through, so the cat appears as the board is cleared.
+   Numbers get a halo in the tile colour so they stay readable over any photo. */
+.board-wrap[data-cat]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--cat-image, none) center / cover no-repeat;
+  opacity: var(--cat-opacity);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.board-wrap[data-cat='loading']::before {
+  opacity: 0;
+}
+
+.board-wrap[data-cat] .board {
+  position: relative;
+}
+
+.board-wrap[data-cat] .cell[data-state='open'] {
+  background: color-mix(in srgb, var(--open) var(--cat-open-alpha), transparent);
+  text-shadow:
+    0 0 2px var(--open),
+    0 0 4px var(--open),
+    0 0 6px var(--open);
 }
 
 .busy {

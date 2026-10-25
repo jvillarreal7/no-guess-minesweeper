@@ -5,6 +5,7 @@ import { parseStats, type Stats } from '../core/stats';
 
 const STATS_KEY = 'ngms.stats.v1';
 const DIFFICULTY_KEY = 'ngms.difficulty.v1';
+const CAT_MODE_KEY = 'ngms.catMode.v1';
 
 function read(key: string): string | null {
   try {
@@ -37,4 +38,12 @@ export function loadDifficultyChoice(): string | null {
 
 export function saveDifficultyChoice(choice: string): void {
   write(DIFFICULTY_KEY, choice);
+}
+
+export function loadCatMode(): boolean {
+  return read(CAT_MODE_KEY) === 'on';
+}
+
+export function saveCatMode(on: boolean): void {
+  write(CAT_MODE_KEY, on ? 'on' : 'off');
 }
