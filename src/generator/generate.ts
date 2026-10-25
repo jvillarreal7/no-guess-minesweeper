@@ -1,7 +1,12 @@
 import { createBoard, getGeometry, type Board, type Geometry } from '../core/board';
 import { createRng, type Rng } from '../core/rng';
+import { solveBoard } from '../solver/solve';
+import type { SolveResult, SolverOptions } from '../solver/types';
 
-/** Bump whenever generator output for a given spec changes (see CLAUDE.md). */
+/**
+ * Bump whenever generator output for a given spec changes (see CLAUDE.md). That includes
+ * solver changes: a stronger or weaker solver accepts a different attempt.
+ */
 export const GENERATOR_VERSION = 1;
 
 /** Together with GENERATOR_VERSION, fully determines a board. */
@@ -50,10 +55,45 @@ export function placeMines(spec: BoardSpec, rng: Rng): Uint8Array {
 }
 
 /**
- * Phase 1 placeholder: random placement with a safe zone, not yet checked by the solver.
- * Boards from this may require guessing.
+ * Random placement with a safe zone, not checked by the solver: the board may need guessing.
+ * Draws from the same RNG state as generate()'s first attempt. Used for tests and benchmarks.
  */
 export function generateUnverified(spec: BoardSpec): Board {
   const mines = placeMines(spec, createRng(spec.seed));
   return createBoard(spec.width, spec.height, mines);
+}
+
+export const DEFAULT_MAX_ATTEMPTS = 500;
+
+export interface GenerateOptions {
+  /** Placements to try before reporting failure. */
+  maxAttempts?: number;
+  /**
+   * Solver limits. For benchmarking only: the solver decides which attempt is accepted,
+   * so changing these (or the solver's strength) changes boards; bump GENERATOR_VERSION.
+   */
+  solver?: SolverOptions;
+}
+
+export type GenerateResult =
+  | { ok: true; board: Board; attempts: number; maxTier: SolveResult['maxTier'] }
+  | { ok: false; attempts: number };
+
+/**
+ * Phase A generator: place mines, solve from scratch from the first click, and accept the
+ * first board the solver clears. Otherwise re-roll from the next RNG state, up to
+ * maxAttempts. Deterministic: the solver's limits count nodes, never time.
+ */
+export function generate(spec: BoardSpec, options: GenerateOptions = {}): GenerateResult {
+  const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new RangeError(`maxAttempts must be a positive integer, got ${maxAttempts}`);
+  }
+  const rng = createRng(spec.seed);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const board = createBoard(spec.width, spec.height, placeMines(spec, rng));
+    const result = solveBoard(board, spec.firstClick, options.solver);
+    if (result.solved) return { ok: true, board, attempts: attempt, maxTier: result.maxTier };
+  }
+  return { ok: false, attempts: maxAttempts };
 }
