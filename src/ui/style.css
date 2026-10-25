@@ -86,6 +86,8 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 18px;
+  /* Lets the board size its cells from the app's real width (cqw units). */
+  container-type: inline-size;
 }
 
 .top {
@@ -225,22 +227,75 @@ input,
   border: 1px solid var(--border);
 }
 
-.board {
+/* The board plus its row and column numbers. Sizing lives here so the number strips and
+   the cells always line up. */
+.board-area {
   --gap: 2px;
+  --label-size: 18px;
   --min-cell: 20px;
-  /* Fill the page width (minus app padding, frame padding and border), within limits.
-     Below the minimum the frame scrolls sideways instead of shrinking further. */
+  /* Width available inside the board frame. The fallback estimates it from the window
+     (which counts the scrollbar); where supported, the app's real width is used. */
+  --room: calc(min(100vw, 1120px) - 56px);
+  /* Fill that width (minus the row-name strip), within limits. Below the minimum the
+     frame scrolls sideways instead. */
   --cell: clamp(
     var(--min-cell),
-    calc((min(100vw, 1120px) - 56px - (var(--cols) - 1) * var(--gap)) / var(--cols)),
+    calc(
+      (var(--room) - var(--label-size) - var(--gap) - (var(--cols) - 1) * var(--gap)) / var(--cols)
+    ),
     34px
   );
+  display: grid;
+  grid-template-columns: var(--label-size) auto;
+  grid-template-rows: var(--label-size) auto;
+  gap: var(--gap);
+  width: max-content;
+  margin: 0 auto;
+}
+
+@supports (width: 1cqw) {
+  /* The app's content width, minus the board frame's padding and border. */
+  .board-area {
+    --room: calc(100cqw - 18px);
+  }
+}
+
+.labels {
+  display: grid;
+  gap: var(--gap);
+  color: var(--muted);
+  font:
+    600 11px/1 system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.labels.columns {
+  grid-template-columns: repeat(var(--cols), var(--cell));
+}
+
+.labels.rows {
+  grid-auto-rows: var(--cell);
+}
+
+.labels span {
+  display: grid;
+  place-items: center;
+}
+
+/* The hinted cell's row and column numbers light up, so "row 3, column 12" is easy to find. */
+.labels span[data-hint] {
+  color: var(--hint);
+  font-weight: 800;
+}
+
+.board {
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
   grid-auto-rows: var(--cell);
   gap: var(--gap);
-  width: max-content;
-  margin: 0 auto;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -248,7 +303,7 @@ input,
 
 @media (pointer: coarse) {
   /* Keep cells big enough to tap; large boards scroll inside the frame. */
-  .board {
+  .board-area {
     --min-cell: 28px;
   }
 }
@@ -368,16 +423,26 @@ input,
   touch-action: manipulation;
 }
 
-.board-wrap[data-cat] .board {
+.board-wrap[data-cat] .board-area {
   position: relative;
   transition:
     opacity 0.35s ease,
     visibility 0s linear 0s;
 }
 
-/* After a cleared board, a double tap hides the board and shows the whole cat. The board
-   keeps its size, so the frame doesn't jump; visibility switches after the fade. */
-.board-wrap[data-cat][data-cat-reveal] .board {
+/* Row and column names stay readable over the photo. */
+.board-wrap[data-cat] .labels {
+  color: var(--text);
+  text-shadow:
+    0 0 2px var(--surface),
+    0 0 4px var(--surface),
+    0 0 6px var(--surface);
+}
+
+/* After a cleared board, a double tap hides the board (and its row and column names) and
+   shows the whole cat. The area keeps its size, so the frame doesn't jump; visibility
+   switches after the fade. */
+.board-wrap[data-cat][data-cat-reveal] .board-area {
   opacity: 0;
   visibility: hidden;
   transition:

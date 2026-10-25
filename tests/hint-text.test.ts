@@ -14,14 +14,14 @@ function textFor(picture: string, totalMines: number): string {
 describe('describeHint', () => {
   it('names the forced mines first, then the technique', () => {
     expect(textFor('?1?1', 1)).toBe(
-      'First, row 1, column 3 has to be a mine, from the numbers around it. ' +
-        'Complete number: the 1 at row 1, column 2 already has its mine, so its other covered neighbours are safe.',
+      'First, A3 has to be a mine, from the numbers around it. ' +
+        'Complete number: the 1 at A2 already has its mine, so its other covered neighbours are safe.',
     );
   });
 
   it('explains shared cells with the actual numbers', () => {
     expect(textFor('???????\n??121??', 4)).toBe(
-      'Shared cells: the 2 at row 2, column 4 must put a mine in cells the 1 at row 2, column 3 also touches. ' +
+      'Shared cells: the 2 at B4 must put a mine in cells the 1 at B3 also touches. ' +
         "That's all the 1 needs, so its other covered neighbours are safe.",
     );
   });
@@ -37,7 +37,7 @@ describe('describeHint', () => {
         numbers,
       ),
     ).toBe(
-      'Shared cells: the 1 at row 1, column 3 must put a mine in cells the 1 at row 2, column 3 also touches. ' +
+      'Shared cells: the 1 at A3 must put a mine in cells the 1 at B3 also touches. ' +
         "That's all the other 1 needs, so its other covered neighbours are safe.",
     );
   });
@@ -61,7 +61,7 @@ describe('describeHint', () => {
 
   it('falls back to every arrangement, naming the numbers involved', () => {
     expect(textFor('???\n2F2', 2)).toBe(
-      'Every arrangement: each way of placing mines that fits the 2 at row 2, column 1 and the 2 at row 2, column 3 ' +
+      'Every arrangement: each way of placing mines that fits the 2 at B1 and the 2 at B3 ' +
         '(with 1 mine left in total) leaves this cell empty.',
     );
   });

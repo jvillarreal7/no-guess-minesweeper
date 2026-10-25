@@ -1,4 +1,5 @@
 import type { CellView } from '../core/game';
+import { cellName, rowName } from './coords';
 
 const SYMBOLS: Record<Exclude<CellView, number>, string> = {
   hidden: '',
@@ -33,14 +34,27 @@ function pulse(cell: HTMLElement): void {
   );
 }
 
+/** Row and column numbers around the board, matching the hint text (counting from 1). */
+export interface BoardLabels {
+  /** Holds the labels and the board; board sizing variables are set here. */
+  area: HTMLElement;
+  columns: HTMLElement;
+  rows: HTMLElement;
+}
+
 /** The minefield: one button per cell. Only paints cells whose view changed. */
 export class BoardView {
   private cells: HTMLButtonElement[] = [];
   private shown: (CellView | null)[] = [];
+  private columnLabels: HTMLElement[] = [];
+  private rowLabels: HTMLElement[] = [];
   private width = 0;
   private height = 0;
 
-  constructor(private readonly grid: HTMLElement) {}
+  constructor(
+    private readonly grid: HTMLElement,
+    private readonly labels: BoardLabels,
+  ) {}
 
   get columns(): number {
     return this.width;
@@ -58,8 +72,17 @@ export class BoardView {
     }
     this.width = width;
     this.height = height;
-    this.grid.style.setProperty('--cols', String(width));
+    this.labels.area.style.setProperty('--cols', String(width));
     this.grid.setAttribute('aria-label', `Minefield, ${width} by ${height}`);
+    const label = (text: string) => {
+      const span = document.createElement('span');
+      span.textContent = text;
+      return span;
+    };
+    this.columnLabels = Array.from({ length: width }, (_, x) => label(String(x + 1)));
+    this.rowLabels = Array.from({ length: height }, (_, y) => label(rowName(y)));
+    this.labels.columns.replaceChildren(...this.columnLabels);
+    this.labels.rows.replaceChildren(...this.rowLabels);
     const fragment = document.createDocumentFragment();
     this.cells = Array.from({ length: width * height }, (_, i) => {
       const cell = document.createElement('button');
@@ -85,12 +108,17 @@ export class BoardView {
     });
   }
 
-  /** Highlights one cell as a hint, or clears the highlight. */
+  /** Highlights one cell as a hint (and its row and column numbers), or clears it. */
   setHint(i: number | null): void {
-    for (const cell of this.grid.querySelectorAll<HTMLElement>('[data-hint]')) {
-      delete cell.dataset.hint;
+    for (const el of this.labels.area.querySelectorAll<HTMLElement>('[data-hint]')) {
+      delete el.dataset.hint;
     }
-    if (i !== null && this.cells[i]) this.cells[i].dataset.hint = 'true';
+    if (i === null || !this.cells[i]) return;
+    this.cells[i].dataset.hint = 'true';
+    const column = this.columnLabels[i % this.width];
+    const row = this.rowLabels[Math.floor(i / this.width)];
+    if (column) column.dataset.hint = 'true';
+    if (row) row.dataset.hint = 'true';
   }
 
   /** Moves keyboard focus (and the single tab stop) to cell i. */
@@ -115,8 +143,6 @@ export class BoardView {
       cell.textContent = SYMBOLS[view];
       description = DESCRIPTIONS[view];
     }
-    const row = Math.floor(i / this.width) + 1;
-    const column = (i % this.width) + 1;
-    cell.setAttribute('aria-label', `${description}, row ${row}, column ${column}`);
+    cell.setAttribute('aria-label', `${description}, ${cellName(i, this.width)}`);
   }
 }

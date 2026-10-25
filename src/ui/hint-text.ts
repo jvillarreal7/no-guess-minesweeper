@@ -1,9 +1,5 @@
 import type { Hint } from '../solver/hint';
-
-/** "row 3, column 12", counting from 1 as a player would. */
-function position(cell: number, width: number): string {
-  return `row ${Math.floor(cell / width) + 1}, column ${(cell % width) + 1}`;
-}
+import { cellName as position } from './coords';
 
 /** "a", "a and b", "a, b and c". */
 function list(items: string[]): string {

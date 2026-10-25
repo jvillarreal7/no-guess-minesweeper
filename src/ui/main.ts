@@ -11,6 +11,7 @@ import { recordPlayed, recordWin, statsFor, statsKey } from '../core/stats';
 import { boardQuery, parseBoardQuery, specFor } from '../generator/share';
 import type { SolveResult } from '../solver/types';
 import { CatMode, onDoubleTap, onPressAndHold } from './cat-mode';
+import { cellName } from './coords';
 import { EngineClient } from './engine-client';
 import { describeHint } from './hint-text';
 import { Hud } from './hud';
@@ -59,7 +60,11 @@ const els = {
   stats: byId<HTMLElement>('stats'),
 };
 
-const board = new BoardView(els.board);
+const board = new BoardView(els.board, {
+  area: byId<HTMLElement>('board-area'),
+  columns: byId<HTMLElement>('column-labels'),
+  rows: byId<HTMLElement>('row-labels'),
+});
 const hud = new Hud({
   mines: byId<HTMLOutputElement>('mines'),
   timer: byId<HTMLOutputElement>('timer'),
@@ -251,7 +256,7 @@ async function requestHint(): Promise<void> {
   }
   hintsUsed++;
   board.setHint(hint.cell);
-  const where = `Row ${Math.floor(hint.cell / width) + 1}, column ${(hint.cell % width) + 1}`;
+  const where = cellName(hint.cell, width);
   const safe =
     current.cellView(hint.cell) === 'flag'
       ? `${where} (highlighted) is flagged, but it is safe.`
