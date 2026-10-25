@@ -43,6 +43,32 @@ export function onPressAndHold(button: HTMLElement, onHold: () => void): void {
   button.addEventListener('contextmenu', (event) => event.preventDefault());
 }
 
+const DOUBLE_TAP_MS = 350;
+const DOUBLE_TAP_SLOP_PX = 30;
+
+/**
+ * Calls `onDoubleTap` on a double tap or double click anywhere inside `el`. Tracked from
+ * pointer events because touch browsers don't reliably send `dblclick`.
+ */
+export function onDoubleTap(el: HTMLElement, handler: () => void): void {
+  let lastTime = -Infinity;
+  let lastX = 0;
+  let lastY = 0;
+  el.addEventListener('pointerup', (event) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    const quick = event.timeStamp - lastTime < DOUBLE_TAP_MS;
+    const close = Math.hypot(event.clientX - lastX, event.clientY - lastY) < DOUBLE_TAP_SLOP_PX;
+    if (quick && close) {
+      lastTime = -Infinity; // A third tap starts a new pair.
+      handler();
+      return;
+    }
+    lastTime = event.timeStamp;
+    lastX = event.clientX;
+    lastY = event.clientY;
+  });
+}
+
 /** Shows a random cat from cataas.com behind the board while enabled. */
 export class CatMode {
   private on = false;
@@ -65,9 +91,20 @@ export class CatMode {
       this.newCat();
     } else {
       this.request++;
+      this.setReveal(false);
       delete this.frame.dataset.cat;
       this.frame.style.removeProperty('--cat-image');
     }
+  }
+
+  get revealed(): boolean {
+    return this.frame.dataset.catReveal !== undefined;
+  }
+
+  /** Hides the board and shows the cat at full strength (after a cleared board). */
+  setReveal(on: boolean): void {
+    if (on && this.on) this.frame.dataset.catReveal = '';
+    else delete this.frame.dataset.catReveal;
   }
 
   /** Swaps in a different cat. Does nothing while cat mode is off. */

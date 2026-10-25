@@ -363,8 +363,30 @@ input,
   opacity: 0;
 }
 
+.board-wrap[data-cat] {
+  /* Double-tapping the frame reveals the cat; don't let the browser zoom instead. */
+  touch-action: manipulation;
+}
+
 .board-wrap[data-cat] .board {
   position: relative;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0s;
+}
+
+/* After a cleared board, a double tap hides the board and shows the whole cat. The board
+   keeps its size, so the frame doesn't jump; visibility switches after the fade. */
+.board-wrap[data-cat][data-cat-reveal] .board {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+.board-wrap[data-cat][data-cat-reveal]::before {
+  opacity: 1;
 }
 
 .board-wrap[data-cat] .cell[data-state='open'] {

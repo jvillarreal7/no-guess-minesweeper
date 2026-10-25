@@ -10,7 +10,7 @@ import { Game } from '../core/game';
 import { recordPlayed, recordWin, statsFor, statsKey } from '../core/stats';
 import { boardQuery, parseBoardQuery, specFor } from '../generator/share';
 import type { SolveResult } from '../solver/types';
-import { CatMode, onPressAndHold } from './cat-mode';
+import { CatMode, onDoubleTap, onPressAndHold } from './cat-mode';
 import { EngineClient } from './engine-client';
 import { Hud } from './hud';
 import { attachInput } from './input';
@@ -109,6 +109,7 @@ function newGame(next: Difficulty = difficulty, fixedSeed?: string): void {
   els.busy.hidden = true;
   board.setSize(next.width, next.height);
   board.setHint(null);
+  catMode.setReveal(false);
   syncUrl();
   hud.setStatus('Click any cell to start. The first click is always an opening.');
   render();
@@ -172,8 +173,9 @@ function afterMove(current: Game, wasOver: boolean): void {
     saveStats(stats);
     const isBest = hintsUsed === 0 && (previousBest === null || ms < previousBest);
     const hints = hintsUsed === 0 ? '' : ` with ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'}`;
+    const cat = catMode.enabled ? ' Double-tap the board to see the cat.' : '';
     hud.setStatus(
-      `Cleared in ${(ms / 1000).toFixed(1)} s${hints}.${isBest ? ' New best!' : ''} ${rating}`,
+      `Cleared in ${(ms / 1000).toFixed(1)} s${hints}.${isBest ? ' New best!' : ''} ${rating}${cat}`,
     );
   } else {
     hud.setStatus(`Boom. There was always a safe move: every board here is solvable. ${rating}`);
@@ -284,6 +286,12 @@ attachInput(els.board, board, {
 });
 
 // Easter egg: hold the face for cat mode. Registered first so a hold doesn't also restart.
+// On a cleared board in cat mode, double-tapping the board hides it to show the whole cat.
+onDoubleTap(byId<HTMLElement>('board-frame'), () => {
+  if (!catMode.enabled || game?.status !== 'won') return;
+  catMode.setReveal(!catMode.revealed);
+});
+
 onPressAndHold(byId<HTMLButtonElement>('restart'), () => {
   catMode.set(!catMode.enabled);
   saveCatMode(catMode.enabled);
