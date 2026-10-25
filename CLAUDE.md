@@ -8,6 +8,7 @@ Browser Minesweeper where every board can be cleared by logic alone. Full plan a
 - `npm run lint`: ESLint + Prettier check
 - `npm run build`: production build
 - `npm run bench -- --difficulty expert --n 1000`: generator benchmark
+- Pushing to `main` lints, tests, builds and deploys to GitHub Pages (`.github/workflows/deploy.yml`). Keep `base: './'` in `vite.config.ts`: Pages serves the site from `/<repo-name>/`.
 
 ## Architecture rules
 - `src/core`, `src/solver` and `src/generator` are pure TypeScript: no DOM, no `window`, no timers. They must run in Node (tests, bench) and in a Web Worker.
