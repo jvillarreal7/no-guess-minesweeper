@@ -21,7 +21,13 @@ describe('buildConstraints', () => {
     // Both 2s see unknown (0,0),(0,1) plus the proven mine at (2,0): 1 left.
     // The zeros at (0,2) and (1,2) see unknown (0,1): 0 left.
     // (2,1)=1 and (2,2)=0 see no unknowns, so they add nothing.
-    expect(buildConstraints(view)).toEqual([c([0, 3], 1), c([0, 3], 1), c([3], 0), c([3], 0)]);
+    // Each constraint also records the number it came from.
+    expect(buildConstraints(view)).toEqual([
+      { ...c([0, 3], 1), source: 1 },
+      { ...c([0, 3], 1), source: 4 },
+      { ...c([3], 0), source: 6 },
+      { ...c([3], 0), source: 7 },
+    ]);
   });
 
   it('throws on a view no layout could produce', () => {

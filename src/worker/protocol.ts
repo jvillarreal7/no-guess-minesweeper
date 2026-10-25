@@ -1,5 +1,6 @@
 import type { BoardSpec } from '../generator/generate';
 import type { SolveResult } from '../solver/types';
+import type { Hint } from '../solver/hint';
 
 /** Main thread -> worker. */
 export type EngineRequest =
@@ -31,7 +32,6 @@ export type GenerateResponse =
   | { id: number; kind: 'error'; message: string };
 
 export type HintResponse =
-  | { id: number; kind: 'hint'; cell: number | null }
-  | { id: number; kind: 'error'; message: string };
+  { id: number; kind: 'hint'; hint: Hint | null } | { id: number; kind: 'error'; message: string };
 
 export type EngineResponse = GenerateResponse | HintResponse;

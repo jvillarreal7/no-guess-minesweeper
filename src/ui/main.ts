@@ -12,6 +12,7 @@ import { boardQuery, parseBoardQuery, specFor } from '../generator/share';
 import type { SolveResult } from '../solver/types';
 import { CatMode, onDoubleTap, onPressAndHold } from './cat-mode';
 import { EngineClient } from './engine-client';
+import { describeHint } from './hint-text';
 import { Hud } from './hud';
 import { attachInput } from './input';
 import { BoardView } from './render';
@@ -236,24 +237,26 @@ async function requestHint(): Promise<void> {
   if (!current || current.isOver || busy) return;
   const token = generation;
   const { width, height, mineCount } = difficulty;
-  const response = await engine.hint(width, height, mineCount, current.visibleNumbers());
+  const numbers = current.visibleNumbers();
+  const response = await engine.hint(width, height, mineCount, numbers);
   if (token !== generation || game !== current || current.isOver) return;
   if (response.kind === 'error') {
     hud.setStatus(`Could not compute a hint: ${response.message}`);
     return;
   }
-  if (response.cell === null) {
+  const { hint } = response;
+  if (hint === null) {
     hud.setStatus('No provably safe cell found. That should not happen here; please report it.');
     return;
   }
   hintsUsed++;
-  board.setHint(response.cell);
-  const where = `Row ${Math.floor(response.cell / width) + 1}, column ${(response.cell % width) + 1}`;
-  hud.setStatus(
-    current.cellView(response.cell) === 'flag'
-      ? `${where} (highlighted) is flagged, but it is provably safe.`
-      : `${where} (highlighted) is provably safe.`,
-  );
+  board.setHint(hint.cell);
+  const where = `Row ${Math.floor(hint.cell / width) + 1}, column ${(hint.cell % width) + 1}`;
+  const safe =
+    current.cellView(hint.cell) === 'flag'
+      ? `${where} (highlighted) is flagged, but it is safe.`
+      : `${where} (highlighted) is safe.`;
+  hud.setStatus(`${safe} ${describeHint(hint, width, numbers)}`);
   render();
 }
 

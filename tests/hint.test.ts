@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { getGeometry } from '../src/core/board';
 import { Game } from '../src/core/game';
 import { generate } from '../src/generator/generate';
-import { findHint, viewFromNumbers } from '../src/solver/hint';
+import { explainHint, findHint, viewFromNumbers } from '../src/solver/hint';
+import { Knowledge } from '../src/solver/types';
 import { viewCase } from './arbitraries';
 import { parseView } from './helpers';
 import { oracle } from './oracle';
@@ -58,6 +59,88 @@ describe('findHint', () => {
         },
       ),
       { numRuns: 300 },
+    );
+  });
+});
+
+describe('explainHint', () => {
+  it('explains a number that already has its mines', () => {
+    // The 1 at (3,0) forces a mine at (2,0); that completes the 1 at (1,0), freeing (0,0).
+    expect(explainHint(parseView('?1?1', 1))).toEqual({
+      cell: 0,
+      reason: { kind: 'complete', source: 1 },
+      mines: [2],
+    });
+  });
+
+  it('explains two numbers sharing cells (1-2-1)', () => {
+    // The 2 must put a mine in cells the 1 also touches, which completes the 1.
+    expect(explainHint(parseView('???????\n??121??', 4))).toEqual({
+      cell: 1,
+      reason: { kind: 'shared', source: 10, target: 9, mines: 1 },
+      mines: [],
+    });
+  });
+
+  it('explains when every mine is accounted for', () => {
+    expect(explainHint(parseView('F??', 1))?.reason).toEqual({
+      kind: 'allMinesFound',
+      totalMines: 1,
+    });
+  });
+
+  it('explains cells away from the numbers when the numbers need every mine left', () => {
+    expect(explainHint(parseView('001??\n001??', 1))).toEqual({
+      cell: 4,
+      reason: { kind: 'remainingMines', minesLeft: 1 },
+      mines: [],
+    });
+  });
+
+  it('falls back to "every arrangement" for the hardest cases', () => {
+    expect(explainHint(parseView('???\n2F2', 2))).toEqual({
+      cell: 0,
+      reason: { kind: 'arrangements', sources: [3, 5], minesLeft: 1 },
+      mines: [],
+    });
+  });
+
+  it('only ever claims things that are true (random positions vs. the oracle)', () => {
+    fc.assert(
+      fc.property(viewCase(5), ({ view }) => {
+        const hint = explainHint(view);
+        const verdict = oracle(view);
+        if (hint === null) {
+          expect(verdict.safe).toEqual([]);
+          return;
+        }
+        expect(verdict.safe).toContain(hint.cell);
+        for (const m of hint.mines) expect(verdict.mines).toContain(m);
+
+        const { neighbors } = view.geometry;
+        const touches = (a: number, b: number) => Array.from(neighbors[a]).includes(b);
+        const { reason } = hint;
+        if (reason.kind === 'complete') {
+          // The number touches the hinted cell and exactly its count of known mines.
+          expect(touches(reason.source, hint.cell)).toBe(true);
+          const known = Array.from(neighbors[reason.source]).filter(
+            (n) => view.knowledge[n] === Knowledge.Mine || hint.mines.includes(n),
+          ).length;
+          expect(known).toBe(view.numbers[reason.source]);
+        }
+        if (reason.kind === 'shared') {
+          expect(touches(reason.target, hint.cell)).toBe(true);
+          expect(touches(reason.source, hint.cell)).toBe(false);
+          const common = Array.from(neighbors[reason.source]).some(
+            (n) => touches(reason.target, n) && view.knowledge[n] !== Knowledge.Safe,
+          );
+          expect(common).toBe(true);
+        }
+        if (reason.kind === 'remainingMines') {
+          expect(Array.from(neighbors[hint.cell]).every((n) => view.numbers[n] < 0)).toBe(true);
+        }
+      }),
+      { numRuns: 3000 },
     );
   });
 });

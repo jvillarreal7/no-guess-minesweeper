@@ -1,6 +1,6 @@
 import { getGeometry } from '../core/board';
 import { generate } from '../generator/generate';
-import { findHint, viewFromNumbers } from '../solver/hint';
+import { explainHint, viewFromNumbers } from '../solver/hint';
 import type { EngineRequest, EngineResponse } from './protocol';
 
 // Typed view of the dedicated-worker global. The project compiles against the DOM lib,
@@ -20,7 +20,7 @@ scope.onmessage = ({ data: request }) => {
         request.totalMines,
         request.numbers,
       );
-      scope.postMessage({ id, kind: 'hint', cell: findHint(view) }, []);
+      scope.postMessage({ id, kind: 'hint', hint: explainHint(view) }, []);
       return;
     }
     const result = generate(request.spec);

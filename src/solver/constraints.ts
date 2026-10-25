@@ -4,6 +4,8 @@ import { Knowledge, type Deduction, type PlayerView, type Tier } from './types';
 export interface Constraint {
   readonly cells: readonly number[];
   readonly mines: number;
+  /** The revealed number this came from, if any (derived constraints have none). */
+  readonly source?: number;
 }
 
 /** The view (or a set of constraints) admits no mine layout. Always a bug upstream. */
@@ -33,7 +35,7 @@ export function buildConstraints(view: PlayerView): Constraint[] {
         `cell ${i} shows ${number} but ${mines} mines remain among ${cells.length} unknown cells`,
       );
     }
-    if (cells.length > 0) constraints.push({ cells, mines });
+    if (cells.length > 0) constraints.push({ cells, mines, source: i });
   }
   return constraints;
 }
