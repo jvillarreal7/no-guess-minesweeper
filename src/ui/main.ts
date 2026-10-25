@@ -66,6 +66,8 @@ let firstClick: number | null = null;
 let game: Game | null = null;
 let maxTier: SolveResult['maxTier'] = 0;
 let hintsUsed = 0;
+/** Whether this game has been counted as played yet (on the player's first move). */
+let playedRecorded = false;
 let busy = false;
 /** Bumped on every new game, so a worker reply for an abandoned game is ignored. */
 let generation = 0;
@@ -90,6 +92,7 @@ function newGame(next: Difficulty = difficulty, fixedSeed?: string): void {
   game = null;
   maxTier = 0;
   hintsUsed = 0;
+  playedRecorded = false;
   busy = false;
   generation++;
   els.busy.hidden = true;
@@ -132,6 +135,14 @@ function syncTimer(): void {
     window.clearInterval(timerHandle);
     timerHandle = undefined;
   }
+}
+
+/** Counts the current game as played, the first time the player changes the board. */
+function recordPlayedOnce(): void {
+  if (playedRecorded) return;
+  playedRecorded = true;
+  stats = recordPlayed(stats, statsKey(difficulty));
+  saveStats(stats);
 }
 
 /** Call after every move: updates the status line and records a finished game once. */
@@ -184,10 +195,14 @@ async function loadBoard(click: number, fromLink: boolean): Promise<void> {
     firstClick = click;
     maxTier = response.maxTier;
     syncUrl();
-    stats = recordPlayed(stats, statsKey(difficulty));
-    saveStats(stats);
-    if (fromLink) hud.setStatus('Shared board loaded. The timer starts on your first move.');
-    else afterMove(game, false);
+    // A fresh game's first click is a move. A board loaded from a link (including a page
+    // reload, since the URL holds the board) only counts once the player acts on it.
+    if (fromLink) {
+      hud.setStatus('Shared board loaded. The timer starts on your first move.');
+    } else {
+      recordPlayedOnce();
+      afterMove(game, false);
+    }
   } else if (response.kind === 'exhausted') {
     seed = newSeed(); // This seed has no solvable board for that click; try another.
     syncUrl();
@@ -245,14 +260,14 @@ attachInput(els.board, board, {
     }
     const wasOver = game.isOver;
     board.setHint(null);
-    game.activate(i);
+    if (game.activate(i).length > 0) recordPlayedOnce();
     afterMove(game, wasOver);
     render();
   },
   secondary(i) {
     if (busy || !game) return;
     board.setHint(null);
-    game.toggleFlag(i);
+    if (game.toggleFlag(i)) recordPlayedOnce();
     render();
   },
 });
