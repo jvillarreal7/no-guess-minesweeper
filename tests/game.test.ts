@@ -165,6 +165,28 @@ describe('chord', () => {
   });
 });
 
+describe('activate (primary click)', () => {
+  it('reveals a hidden cell', () => {
+    const game = new Game(parseBoard(DIAGONAL));
+    expect(game.activate(at(3, 1, 1))).toEqual([at(3, 1, 1)]);
+  });
+
+  it('chords a revealed number', () => {
+    const game = new Game(parseBoard(DIAGONAL));
+    game.activate(at(3, 1, 1));
+    game.toggleFlag(at(3, 0, 0));
+    game.toggleFlag(at(3, 2, 2));
+    expect(game.activate(at(3, 1, 1))).toHaveLength(6);
+    expect(game.status).toBe('won');
+  });
+
+  it('does nothing on a flagged cell', () => {
+    const game = new Game(parseBoard(DIAGONAL));
+    game.toggleFlag(at(3, 1, 1));
+    expect(game.activate(at(3, 1, 1))).toEqual([]);
+  });
+});
+
 describe('win', () => {
   it('wins when every safe cell is revealed, and auto-flags the mines', () => {
     const game = new Game(parseBoard(DIAGONAL));

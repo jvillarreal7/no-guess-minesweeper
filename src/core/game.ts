@@ -76,6 +76,12 @@ export class Game {
     return revealed;
   }
 
+  /** Primary click: chords a revealed number, otherwise reveals. Returns the newly revealed cells. */
+  activate(i: number): number[] {
+    this.assertIndex(i);
+    return this.state[i] === CellState.Revealed ? this.chord(i) : this.reveal(i);
+  }
+
   /** Toggles a flag on a hidden cell. Returns whether anything changed. */
   toggleFlag(i: number): boolean {
     this.assertIndex(i);

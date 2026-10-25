@@ -3,10 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Minesweeper where every board can be cleared by logic alone."
+    />
     <title>No-Guess Minesweeper</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main class="app">
+      <header class="top">
+        <h1>No-Guess Minesweeper</h1>
+        <p class="tagline">Every board can be cleared by logic alone.</p>
+        <label class="picker">
+          <span>Difficulty</span>
+          <select id="difficulty">
+            <option value="beginner">Beginner · 9×9 · 10</option>
+            <option value="intermediate">Intermediate · 16×16 · 40</option>
+            <option value="expert">Expert · 30×16 · 99</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </label>
+        <form id="custom" class="custom" hidden novalidate>
+          <label>
+            <span>Width</span>
+            <input id="custom-width" type="number" inputmode="numeric" value="30" />
+          </label>
+          <label>
+            <span>Height</span>
+            <input id="custom-height" type="number" inputmode="numeric" value="16" />
+          </label>
+          <label>
+            <span>Mines</span>
+            <input id="custom-mines" type="number" inputmode="numeric" value="99" />
+          </label>
+          <button id="custom-start" type="submit">Start</button>
+          <p id="custom-message" class="custom-message" aria-live="polite"></p>
+        </form>
+      </header>
+
+      <section class="game" aria-label="Game">
+        <div class="hud">
+          <output id="mines" class="counter" aria-label="Mines left">010</output>
+          <button id="restart" class="face" type="button" aria-label="New game">🙂</button>
+          <output id="timer" class="counter" aria-label="Seconds">000</output>
+        </div>
+        <div class="board-wrap">
+          <div id="board" class="board" aria-label="Minefield"></div>
+          <div id="busy" class="busy" hidden>Generating a no-guess board…</div>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <footer class="help">
+        <span><kbd>Click</kbd> reveal</span>
+        <span><kbd>Right-click</kbd> or <kbd>long-press</kbd> flag</span>
+        <span><kbd>Click a number</kbd> chord</span>
+        <span><kbd>Arrows</kbd> move · <kbd>Enter</kbd> reveal · <kbd>F</kbd> flag</span>
+      </footer>
+    </main>
     <script type="module" src="/src/ui/main.ts"></script>
   </body>
 </html>

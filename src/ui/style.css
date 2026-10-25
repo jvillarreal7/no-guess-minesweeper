@@ -1,0 +1,353 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f4f2ee;
+  --surface: #ffffff;
+  --text: #1d1f23;
+  --muted: #5d6470;
+  --border: #d9d5cc;
+  --accent: #2f6fd6;
+  --tile: #c9ced8;
+  --tile-hi: #dde1e8;
+  --tile-lo: #a9b0bd;
+  --open: #eceae5;
+  --open-line: #d6d2c9;
+  --boom: #e5484d;
+  --counter-bg: #1d1f23;
+  --counter-fg: #ff5a4e;
+  --n1: #1f5fd1;
+  --n2: #1d8a3a;
+  --n3: #d1332f;
+  --n4: #3a2bb0;
+  --n5: #8f2424;
+  --n6: #11807f;
+  --n7: #1d1f23;
+  --n8: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171b;
+    --surface: #1e2127;
+    --text: #e8e6e1;
+    --muted: #9aa1ad;
+    --border: #343842;
+    --accent: #6ea0ff;
+    --tile: #474d59;
+    --tile-hi: #5a6170;
+    --tile-lo: #343944;
+    --open: #262a31;
+    --open-line: #31353d;
+    --boom: #e5484d;
+    --counter-bg: #0b0c0e;
+    --counter-fg: #ff6b5f;
+    --n1: #6ea0ff;
+    --n2: #5cc377;
+    --n3: #ff6b66;
+    --n4: #a99bff;
+    --n5: #e48a6b;
+    --n6: #4fd1cf;
+    --n7: #e8e6e1;
+    --n8: #9aa1ad;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.45 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+.app {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+select,
+input,
+.custom button {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.custom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.custom[hidden] {
+  display: none;
+}
+
+.custom input {
+  width: 5.5em;
+  margin-left: 4px;
+}
+
+.custom button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.custom button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.custom-message {
+  flex-basis: 100%;
+  margin: 0;
+  min-height: 1.45em;
+  color: var(--muted);
+}
+
+.custom-message[data-kind='error'] {
+  color: var(--boom);
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 340px);
+}
+
+.counter {
+  min-width: 4.2ch;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--counter-bg);
+  color: var(--counter-fg);
+  font:
+    700 1.35rem/1 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.face {
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  line-height: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.face:hover {
+  background: var(--tile-hi);
+}
+
+.board-wrap {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.board {
+  --gap: 2px;
+  --min-cell: 20px;
+  /* Fill the page width (minus app padding, frame padding and border), within limits.
+     Below the minimum the frame scrolls sideways instead of shrinking further. */
+  --cell: clamp(
+    var(--min-cell),
+    calc((min(100vw, 1120px) - 56px - (var(--cols) - 1) * var(--gap)) / var(--cols)),
+    34px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: var(--gap);
+  width: max-content;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  /* Keep cells big enough to tap; large boards scroll inside the frame. */
+  .board {
+    --min-cell: 28px;
+  }
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  font:
+    800 calc(var(--cell) * 0.56) / 1 system-ui,
+    sans-serif;
+  color: var(--text);
+  background: var(--tile);
+  box-shadow:
+    inset 0 2px 0 var(--tile-hi),
+    inset 0 -2px 0 var(--tile-lo);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cell[data-state='hidden']:hover,
+.cell[data-state='flag']:hover {
+  background: var(--tile-hi);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.cell[data-state='open'] {
+  background: var(--open);
+  box-shadow: inset 0 0 0 1px var(--open-line);
+  cursor: default;
+}
+
+.cell[data-state='open'][data-n]:not([data-n='0']) {
+  cursor: pointer;
+}
+
+.cell[data-state='mine'],
+.cell[data-state='exploded'] {
+  background: var(--open);
+  box-shadow: inset 0 0 0 1px var(--open-line);
+  font-size: calc(var(--cell) * 0.5);
+}
+
+.cell[data-state='exploded'] {
+  background: var(--boom);
+}
+
+.cell[data-state='wrong-flag'] {
+  font-size: calc(var(--cell) * 0.5);
+}
+
+.cell[data-n='1'] {
+  color: var(--n1);
+}
+.cell[data-n='2'] {
+  color: var(--n2);
+}
+.cell[data-n='3'] {
+  color: var(--n3);
+}
+.cell[data-n='4'] {
+  color: var(--n4);
+}
+.cell[data-n='5'] {
+  color: var(--n5);
+}
+.cell[data-n='6'] {
+  color: var(--n6);
+}
+.cell[data-n='7'] {
+  color: var(--n7);
+}
+.cell[data-n='8'] {
+  color: var(--n8);
+}
+
+.busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  font-weight: 600;
+}
+
+.busy[hidden] {
+  display: none;
+}
+
+.status {
+  margin: 0;
+  min-height: 1.45em;
+  text-align: center;
+}
+
+.help {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+kbd {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+}
