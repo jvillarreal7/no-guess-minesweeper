@@ -173,9 +173,8 @@ function afterMove(current: Game, wasOver: boolean): void {
     saveStats(stats);
     const isBest = hintsUsed === 0 && (previousBest === null || ms < previousBest);
     const hints = hintsUsed === 0 ? '' : ` with ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'}`;
-    const cat = catMode.enabled ? ' Double-tap the board to see the cat.' : '';
     hud.setStatus(
-      `Cleared in ${(ms / 1000).toFixed(1)} s${hints}.${isBest ? ' New best!' : ''} ${rating}${cat}`,
+      `Cleared in ${(ms / 1000).toFixed(1)} s${hints}.${isBest ? ' New best!' : ''} ${rating}`,
     );
   } else {
     hud.setStatus(`Boom. There was always a safe move: every board here is solvable. ${rating}`);
