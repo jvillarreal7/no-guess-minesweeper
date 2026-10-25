@@ -2,7 +2,15 @@ import { getGeometry, type Board } from '../core/board';
 import { buildConstraints, ContradictionError, globalConstraint } from './constraints';
 import { tier1 } from './tier1';
 import { tier2 } from './tier2';
-import { createView, Knowledge, type Deduction, type PlayerView, type SolveResult } from './types';
+import { tier3 } from './tier3';
+import {
+  createView,
+  Knowledge,
+  type Deduction,
+  type PlayerView,
+  type SolveResult,
+  type SolverOptions,
+} from './types';
 
 /** Returns the number under a cell. Called only on cells already proven safe. */
 export type RevealFn = (i: number) => number;
@@ -11,9 +19,13 @@ export type RevealFn = (i: number) => number;
  * Runs the tiers in order on the current view and returns the first that makes progress.
  * Tier 1 includes the trivial global-count cases (no mines left / every unknown a mine).
  */
-export function findDeductions(view: PlayerView): Deduction | null {
+export function findDeductions(view: PlayerView, options: SolverOptions = {}): Deduction | null {
   const constraints = buildConstraints(view);
-  return tier1([...constraints, globalConstraint(view)]) ?? tier2(constraints);
+  return (
+    tier1([...constraints, globalConstraint(view)]) ??
+    tier2(constraints) ??
+    tier3(view, constraints, options)
+  );
 }
 
 /**
@@ -21,7 +33,11 @@ export function findDeductions(view: PlayerView): Deduction | null {
  * every safe cell is revealed (solved) or no tier can prove anything (stuck).
  * Mutates `view`. Mine positions are learned only through `reveal` on proven-safe cells.
  */
-export function solve(view: PlayerView, reveal: RevealFn): SolveResult {
+export function solve(
+  view: PlayerView,
+  reveal: RevealFn,
+  options: SolverOptions = {},
+): SolveResult {
   const { knowledge, numbers, totalMines } = view;
   const { size, neighbors } = view.geometry;
   const pending: number[] = [];
@@ -63,7 +79,7 @@ export function solve(view: PlayerView, reveal: RevealFn): SolveResult {
       return { solved: true, maxTier, steps };
     }
 
-    const deduction = findDeductions(view);
+    const deduction = findDeductions(view, options);
     if (!deduction) return { solved: false, maxTier, steps };
     steps++;
     if (deduction.tier > maxTier) maxTier = deduction.tier;
@@ -81,12 +97,16 @@ export function revealFromBoard(board: Board): RevealFn {
 }
 
 /** Solves `board` from scratch, starting with a click on `firstClick`. */
-export function solveBoard(board: Board, firstClick: number): SolveResult & { view: PlayerView } {
+export function solveBoard(
+  board: Board,
+  firstClick: number,
+  options: SolverOptions = {},
+): SolveResult & { view: PlayerView } {
   if (!Number.isInteger(firstClick) || firstClick < 0 || firstClick >= board.size) {
     throw new RangeError(`first click ${firstClick} is outside 0..${board.size - 1}`);
   }
   // Use the shared geometry, not `board` itself, so the view carries no mine layout.
   const view = createView(getGeometry(board.width, board.height), board.mineCount);
   view.knowledge[firstClick] = Knowledge.Safe;
-  return { ...solve(view, revealFromBoard(board)), view };
+  return { ...solve(view, revealFromBoard(board), options), view };
 }

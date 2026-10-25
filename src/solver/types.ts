@@ -27,6 +27,14 @@ export interface Deduction {
   tier: Tier;
 }
 
+/** Limits that keep Tier 3 fast. Hitting one makes the solver skip work (sound, incomplete). */
+export interface SolverOptions {
+  /** Components with more cells than this are not enumerated. */
+  maxComponentSize?: number;
+  /** Backtracking nodes allowed per component before giving up on it. */
+  maxNodes?: number;
+}
+
 export interface SolveResult {
   /** Every safe cell was revealed. */
   solved: boolean;
