@@ -67,7 +67,7 @@ const hud = new Hud({
 });
 const engine = new EngineClient();
 const catMode = new CatMode(byId<HTMLElement>('board-frame'), () =>
-  hud.setStatus("Couldn't reach cataas.com, so no cat this time."),
+  hud.setStatus("The cat couldn't make it this time."),
 );
 
 let difficulty: Difficulty = DIFFICULTIES.beginner;
