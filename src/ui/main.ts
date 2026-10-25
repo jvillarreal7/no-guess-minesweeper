@@ -66,9 +66,13 @@ const hud = new Hud({
   status: byId<HTMLElement>('status'),
 });
 const engine = new EngineClient();
-const catMode = new CatMode(byId<HTMLElement>('board-frame'), () =>
-  hud.setStatus("The cat couldn't make it this time."),
-);
+// If a cat fails to load, leave cat mode (and save that, so a reload doesn't retry and fail).
+const catMode = new CatMode(byId<HTMLElement>('board-frame'), () => {
+  catMode.set(false);
+  saveCatMode(false);
+  hud.setStatus("The cat couldn't make it this time.");
+  render();
+});
 
 let difficulty: Difficulty = DIFFICULTIES.beginner;
 let seed = '';
