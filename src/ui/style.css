@@ -217,23 +217,25 @@ input,
   background: var(--tile-hi);
 }
 
+/* The game window: the board in its frame. Row and column names sit outside it. */
 .board-wrap {
   position: relative;
-  max-width: 100%;
-  overflow-x: auto;
-  padding: 8px;
+  grid-area: 2 / 2;
+  padding: var(--frame-pad);
   border-radius: 12px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--frame-border) solid var(--border);
 }
 
-/* The board plus its row and column numbers. Sizing lives here so the number strips and
-   the cells always line up. */
+/* The framed board plus its row and column names around the outside. Sizing lives here so
+   the name strips and the cells always line up. Big boards scroll sideways as a whole. */
 .board-area {
   --gap: 2px;
   --label-size: 18px;
   --min-cell: 20px;
-  /* Width available inside the board frame. The fallback estimates it from the window
+  --frame-pad: 8px;
+  --frame-border: 1px;
+  /* Width available for the frame's contents. The fallback estimates it from the window
      (which counts the scrollbar); where supported, the app's real width is used. */
   --room: calc(min(100vw, 1120px) - 56px);
   /* Fill that width (minus the row-name strip), within limits. Below the minimum the
@@ -250,6 +252,8 @@ input,
   grid-template-rows: var(--label-size) auto;
   gap: var(--gap);
   width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
   margin: 0 auto;
 }
 
@@ -272,12 +276,17 @@ input,
   -webkit-user-select: none;
 }
 
+/* Each strip is inset by the frame's padding and border so its names line up with the cells. */
 .labels.columns {
+  grid-area: 1 / 2;
   grid-template-columns: repeat(var(--cols), var(--cell));
+  padding-inline: calc(var(--frame-pad) + var(--frame-border));
 }
 
 .labels.rows {
+  grid-area: 2 / 1;
   grid-auto-rows: var(--cell);
+  padding-block: calc(var(--frame-pad) + var(--frame-border));
 }
 
 .labels span {
@@ -423,26 +432,19 @@ input,
   touch-action: manipulation;
 }
 
-.board-wrap[data-cat] .board-area {
+.board-wrap[data-cat] .board,
+.board-wrap[data-cat] ~ .labels {
   position: relative;
   transition:
     opacity 0.35s ease,
     visibility 0s linear 0s;
 }
 
-/* Row and column names stay readable over the photo. */
-.board-wrap[data-cat] .labels {
-  color: var(--text);
-  text-shadow:
-    0 0 2px var(--surface),
-    0 0 4px var(--surface),
-    0 0 6px var(--surface);
-}
-
 /* After a cleared board, a double tap hides the board (and its row and column names) and
-   shows the whole cat. The area keeps its size, so the frame doesn't jump; visibility
+   shows the whole cat. Everything keeps its size, so the frame doesn't jump; visibility
    switches after the fade. */
-.board-wrap[data-cat][data-cat-reveal] .board-area {
+.board-wrap[data-cat][data-cat-reveal] .board,
+.board-wrap[data-cat][data-cat-reveal] ~ .labels {
   opacity: 0;
   visibility: hidden;
   transition:

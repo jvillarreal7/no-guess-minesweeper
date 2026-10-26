@@ -47,14 +47,13 @@
           <button id="restart" class="face" type="button" aria-label="New game">🙂</button>
           <output id="timer" class="counter" aria-label="Seconds">000</output>
         </div>
-        <div id="board-frame" class="board-wrap">
-          <div id="board-area" class="board-area">
-            <div class="labels-corner" aria-hidden="true"></div>
-            <div id="column-labels" class="labels columns" aria-hidden="true"></div>
-            <div id="row-labels" class="labels rows" aria-hidden="true"></div>
+        <div id="board-area" class="board-area">
+          <div id="board-frame" class="board-wrap">
             <div id="board" class="board" aria-label="Minefield"></div>
+            <div id="busy" class="busy" hidden>Generating a no-guess board…</div>
           </div>
-          <div id="busy" class="busy" hidden>Generating a no-guess board…</div>
+          <div id="column-labels" class="labels columns" aria-hidden="true"></div>
+          <div id="row-labels" class="labels rows" aria-hidden="true"></div>
         </div>
         <div class="toolbar">
           <button id="hint" class="tool" type="button" disabled>💡 Hint</button>
